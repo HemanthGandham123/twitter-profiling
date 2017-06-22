@@ -28,7 +28,7 @@ for fname in iglob(os.path.expanduser('output1/*.json')):
         array.append(tweets)
         auth_id=tweets['meta']['author_id']
         auth_name=tweets['meta']['author_name']
-        print (auth_id)
+        #print (auth_id)
         dt=tweets['meta']['date']['$date']
         if(graph.find_one("Ariana",property_key = 'id', property_value = auth_id)==None):
             node = Node("Ariana",id=auth_id, name=tweets['meta']['author_name'],bundle_id=tweets['meta']['retweetOf'])
@@ -56,7 +56,7 @@ for fname in iglob(os.path.expanduser('output1/*.json')):
                 rel_ind=rel_ind+1
                 rel=Relationship(n1,st,n2,content=tweets['text']['content'])
                 graph.create(rel)
-                print ('hi')
+                #print ('hi')
                 hf=0
             for i in nh:
                 for j in nh:
@@ -74,8 +74,15 @@ for fname in iglob(os.path.expanduser('output1/*.json')):
         if tweets['text']['entities']['mention']:
             for ment in tweets['text']['entities']['mention']:
                 mnt=ment.values()
+                print (list(mnt))
                 m_id=str(list(mnt)[2])
-                m_name=str(list(mnt)[4])
+                m_name=str(list(mnt)[3])
+                #m_name=ment['screen_name']
+                #m_id=ment['id']
+                #m_name=str(list(m_name))
+                #m_id=(list(m_id))
+                #print(m_id)
+                #print(m_name)
                 if(graph.find_one("Ariana",property_key = 'id', property_value =m_id)==None):
                     node = Node("Ariana", name=m_name,id=m_id,type=3)
                     graph.create(node)
@@ -128,7 +135,7 @@ for fname in iglob(os.path.expanduser('output1/*.json')):
         array.append(tweets)
         auth_id=tweets['meta']['author_id']
         auth_name=tweets['meta']['author_name']
-        print (auth_id)
+        #print (auth_id)
         n1=graph.find_one("Ariana",property_key = 'id', property_value = auth_id)
         if (n1==None):
             hf=1
@@ -144,6 +151,9 @@ for fname in iglob(os.path.expanduser('output1/*.json')):
                 jna=n2['name']
                 score.setdefault(auth_name,{}).setdefault(jna,0)
                 score[auth_name][jna]+=4
-            #    score.setdefault(jna,{}).setdefault(auth_name,0)
-            #    score[jna][auth_name]+=4
 #print (score)
+qry="Sensex"
+closer=sorted(score[qry].items(), key=lambda x: x[1],reverse=True)
+closest=closer[:2]
+for i in closest:
+        print (i)
