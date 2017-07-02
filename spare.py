@@ -44,6 +44,15 @@ def clstr(n1,n2):
             graph.merge(n2)
             n2['cid']=n1['cid']
             n2.push()
+def recreate(n1,n2,con,a):
+    global r_id
+    global rel_ind
+    r_id=tofrac(rel_ind)+a
+    st=str(r_id)
+    rel_ind=rel_ind+1
+    rel=Relationship(n1,st,n2,content=con)
+    graph.create(rel)
+    clstr(n1,n2)
 
 #Relationship(a, "similartags", b, weight = tcount)
 node=Node("Grande",id=0,name="zero_node",type=0,date=0,cid=0)
@@ -62,6 +71,7 @@ for fname in iglob(os.path.expanduser('jason/*.json')):
         array.append(tweets)
         auth_id=tweets['meta']['author_id']
         auth_name=tweets['meta']['author_name']
+        con=tweets['text']['content']
         #print (auth_id)
         #dt=tweets['meta']['date']['$date']
         n1= graph.find_one("Grande",property_key = 'name', property_value = auth_name)
@@ -89,12 +99,7 @@ for fname in iglob(os.path.expanduser('jason/*.json')):
                 n2=graph.find_one("Grande",property_key='text',property_value=hshtg)
                 nh.append(n2)
                 if(exist==1):
-                    r_id=tofrac(rel_ind)+1
-                    st=str(r_id)
-                    rel_ind=rel_ind+1
-                    rel=Relationship(n1,st,n2,content=tweets['text']['content'])
-                    graph.create(rel)
-                    clstr(n1,n2)
+                    recreate(n1,n2,con,2)
                 else:
                     if(auth_name in backpatch):
                         backpatch[auth_name].append(hshtg)
@@ -110,12 +115,7 @@ for fname in iglob(os.path.expanduser('jason/*.json')):
                         jna=j["text"]
                         score.setdefault(ina,{}).setdefault(jna,0)
                         score[ina][jna]+=4
-                        r_id=tofrac(rel_ind)+5
-                        st=str(r_id)
-                        rel_ind=rel_ind+1
-                        rel=Relationship(i,st,j,content=tweets['text']['content'])
-                        graph.create(rel)
-                        clstr(i,j)
+                        recreate(i,j,con,5)
         nm=[]
         mn_dict=tweets['text']['entities']['mention']
         if (mn_dict !=None):
@@ -134,12 +134,7 @@ for fname in iglob(os.path.expanduser('jason/*.json')):
                 score.setdefault(m_name,{}).setdefault(auth_name,0)
                 score[m_name][auth_name]+=8
                 if(exist==1):
-                    r_id=tofrac(rel_ind)+2
-                    st=str(r_id)
-                    rel_ind=rel_ind+1
-                    rel=Relationship(n1,st,n3,content=tweets['text']['content'])
-                    graph.create(rel)
-                    clstr(n1,n3)
+                    recreate(n1,n3,con,3)
                 else:
                     if(auth_name in backpatch):
                         backpatch[auth_name].append(m_name)
@@ -153,12 +148,7 @@ for fname in iglob(os.path.expanduser('jason/*.json')):
                             jna=j["text"]
                             score.setdefault(ina,{}).setdefault(jna,0)
                             score[ina][jna]+=4
-                            r_id=tofrac(rel_ind)+6
-                            st=str(r_id)
-                            rel_ind=rel_ind+1
-                            rel=Relationship(i,st,j,content=tweets['text']['content'])
-                            graph.create(rel)
-                            clstr(i,j)
+                            recreate(i,j,con,6)
                 if(hf==0):
                     #mention and hashtag
                     for i in nm:
@@ -167,12 +157,7 @@ for fname in iglob(os.path.expanduser('jason/*.json')):
                             jna=j["text"]
                             score.setdefault(ina,{}).setdefault(jna,0)
                             score[ina][jna]+=5
-                            r_id=tofrac(rel_ind)+3
-                            st=str(r_id)
-                            rel_ind=rel_ind+1
-                            rel=Relationship(i,st,j,content=tweets['text']['content'])
-                            graph.create(rel)
-                            clstr(i,j)
+                            recreate(i,j,con,3)
                 mf=0
         #create mention when there is no hashtag and mention(extra condition for empty tweeting users (empty user becomes useless node))
         if(hf==1 and mf==1):
@@ -183,28 +168,6 @@ for fname in iglob(os.path.expanduser('jason/*.json')):
                 graph.merge(n1)
                 n1['cid']=cluster_id
                 n1.push()
-            r_id=tofrac(rel_ind)
-            st=str(r_id)
-            rel_ind=rel_ind+1
-            #rel=Relationship(n1,st,n4,content=tweets['text']['content'])
-            #graph.create(rel)
-#print (backpatch)
-#print (score)
-#for each element in dic creating relationships
-for my_var in retweet_rel:
-    n1=graph.find_one("Grande",property_key = 'id', property_value = my_var)
-    n2=graph.find_one("Grande",property_key='bundle_id',property_value=retweet_rel[my_var])
-    if(n1!=None and n2!= None):
-        r_id=tofrac(rel_ind)+4
-        st=str(r_id)
-        rel_ind=rel_ind+1
-        rel=Relationship(n1,st,n2,content=tweets['text']['content'])
-        graph.create(rel)
-        clstr(n1,n2)
-        jna=n2['name']
-        score.setdefault(auth_name,{}).setdefault(jna,0)
-        score[auth_name][jna]+=4
-        #print (my_var, ' : ', retweet_rel[my_var])
 death_note=[]
 #print (score)
 #print (backpatch)
@@ -215,22 +178,25 @@ for i in backpatch:
     else:
         for j in backpatch[i]:
             n2=graph.find_one("Grande",property_key='name',property_value=j)
-            r_id=tofrac(rel_ind)+1
-            st=str(r_id)
-            rel_ind=rel_ind+1
             if(n2 is None):
                 print (j)
-            rel=Relationship(n1,st,n2)
-            graph.create(rel)
-            clstr(n1,n2)
+            recreate(n1,n2,con,1)
 #print (death_note)
 for i in death_note:
     del backpatch[i]
+#for each element in dic creating relationships
+for my_var in retweet_rel:
+    n1=graph.find_one("Grande",property_key = 'id', property_value = my_var)
+    n2=graph.find_one("Grande",property_key='bundle_id',property_value=retweet_rel[my_var])
+    if(n1!=None and n2!= None):
+        recreate(n1,n2,con,4)
+        jna=n2['name']
+        score.setdefault(auth_name,{}).setdefault(jna,0)
+        score[auth_name][jna]+=4
+        #print (my_var, ' : ', retweet_rel[my_var])
 qry="narendramodi"
 closer=sorted(score[qry].items(), key=lambda x: x[1],reverse=True)
 closest=closer[:2]
-#for i in closest:
-#        print (i)
 print (pair)
 #cluster id part
 switch=[]
