@@ -54,7 +54,7 @@ pair=[]
 n4= graph.find_one("Grande",property_key = 'id', property_value = 0)
 for fname in iglob(os.path.expanduser('jason/*.json')):
     with open(fname) as fin:
-        print (fname)
+        #print (fname)
         hf=1
         mf=1
         exist=1
@@ -223,12 +223,73 @@ for i in backpatch:
             rel=Relationship(n1,st,n2)
             graph.create(rel)
             clstr(n1,n2)
-print (death_note)
+#print (death_note)
 for i in death_note:
     del backpatch[i]
 qry="narendramodi"
 closer=sorted(score[qry].items(), key=lambda x: x[1],reverse=True)
 closest=closer[:2]
-for i in closest:
-        print (i)
+#for i in closest:
+#        print (i)
 print (pair)
+#cluster id part
+switch=[]
+mac=0
+for li in pair:
+    if(mac<max(li)):
+        mac=max(li)
+for i in range (0,len(pair)+1):
+        switch.append(0)
+new=[]
+for li in pair:
+    if(switch[li[0]]==0 and switch[li[1]]==0 ):
+        switch[li[0]]=1
+        switch[li[1]]=1
+        new.append(li)
+    else:
+        if(switch[li[0]]!=0 and switch[li[1]]!=0 and switch[li[0]!=switch[li[1]]]):
+            for i in new:
+                if li[0] in i:
+                    a=new.index(i)
+                    break
+            for i in new:
+                if li[1] in i:
+                    b=new.index(i)
+                    break
+            if(a!=b):
+                for j in new[b]:
+                    if(j not in new[a]):
+                        new[a].append(j)
+                new[b]=[0]
+        elif(switch[li[0]]!=0):
+            for i in new:
+                if li[0] in i:
+                    a=new.index(i)
+                    break
+            if(li[1] not in new[a]):
+                new[a].append(li[1])
+                switch[li[1]]=1
+        else:
+            for i in new:
+                if li[1] in i:
+                    a=new.index(i)
+                    break
+            if(li[0] not in new[a]):
+                new[a].append(li[0])
+                switch[li[0]]=1
+#filter(lambda a: a !=[0], new)
+print ("dsfdgg  ga d fadsfagf ")
+new[:] = (value for value in new if value !=[0])
+for li in new:
+    if(0 in li):
+        a=li.index(0)
+        del li[a]
+for i in new:
+    print (i)
+
+for li in new:
+    for t in li:
+        n1=graph.find_one("Grande",property_key='cid',property_value=t)
+        graph.merge(n1)
+        n1['cid']=li[0]
+        n1.push()
