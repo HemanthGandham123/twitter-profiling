@@ -23,27 +23,11 @@ def tofrac(a):
 def clstr(n1,n2):
     global cluster_id
     tp=[]
-    if(n1['cid']==None and n2['cid']==None):
-        cluster_id+=1
-        graph.merge(n1)
-        n1['cid']=cluster_id
-        n1.push()
-        graph.merge(n2)
-        n2['cid']=cluster_id
-        n2.push()
-    elif(n1['cid']!=None and n2['cid']!=None and n1['cid']!=n2['cid']):
+    if(n1['cid']!=n2['cid']):
         tp.append(n1['cid'])
         tp.append(n2['cid'])
         pair.append(tp)
-    else:
-        if(n1['cid']==None):
-            graph.merge(n1)
-            n1['cid']=n2['cid']
-            n1.push()
-        else:
-            graph.merge(n2)
-            n2['cid']=n1['cid']
-            n2.push()
+
 def recreate(n1,n2,con,a):
     global r_id
     global rel_ind
@@ -53,9 +37,15 @@ def recreate(n1,n2,con,a):
     rel=Relationship(n1,st,n2,content=con)
     graph.create(rel)
     clstr(n1,n2)
+    graph.merge(n1)
+    n1['deg']+=1
+    n1.push()
+    graph.merge(n2)
+    n2['deg']+=1
+    n2.push()
 
 #Relationship(a, "similartags", b, weight = tcount)
-node=Node("Grande",id=0,name="zero_node",type=0,date=0,cid=0)
+node=Node("Grande",id=0,name="zero_node",type=0,date=0,cid=0,deg=0)
 graph.create(node)
 #dic created
 retweet_rel={}
@@ -88,15 +78,15 @@ for fname in iglob(os.path.expanduser('jason/*.json')):
             for hshtgo in tweets['text']['entities']['hashtags']:
                 hshtg=hshtgo['text']
                 hf=0
-                if(graph.find_one("Grande",property_key='text',property_value=hshtg)==None):
+                if(graph.find_one("Grande",property_key='name',property_value=hshtg)==None):
                     cluster_id+=1
-                    node=Node("Grande",text=hshtg,type=2,cid=cluster_id)
+                    node=Node("Grande",name=hshtg,type=2,cid=cluster_id,deg=0)
                     graph.create(node)
                 score.setdefault(auth_name,{}).setdefault(hshtg,0)
                 score[auth_name][hshtg]+=8
                 score.setdefault(hshtg,{}).setdefault(auth_name,0)
                 score[hshtg][auth_name]+=8
-                n2=graph.find_one("Grande",property_key='text',property_value=hshtg)
+                n2=graph.find_one("Grande",property_key='name',property_value=hshtg)
                 nh.append(n2)
                 if(exist==1):
                     recreate(n1,n2,con,2)
@@ -125,7 +115,7 @@ for fname in iglob(os.path.expanduser('jason/*.json')):
                 #print (m_name)
                 if(graph.find_one("Grande",property_key = 'name', property_value =m_name)==None):
                     cluster_id+=1
-                    node = Node("Grande", name=m_name,type=3,cid=cluster_id)
+                    node = Node("Grande", name=m_name,type=3,cid=cluster_id,deg=0)
                     graph.create(node)
                 n3= graph.find_one("Grande",property_key = 'name', property_value =m_name )
                 nm.append(n3)
@@ -162,7 +152,7 @@ for fname in iglob(os.path.expanduser('jason/*.json')):
         #create mention when there is no hashtag and mention(extra condition for empty tweeting users (empty user becomes useless node))
         if(hf==1 and mf==1):
             if(exist==0):
-                n1 = Node("Grande",id=auth_id, name=tweets['meta']['author_name'],bundle_id=tweets['meta']['retweetOf'])
+                n1 = Node("Grande",id=auth_id, name=tweets['meta']['author_name'],bundle_id=tweets['meta']['retweetOf'],deg=0)
                 graph.create(n1)
                 cluster_id+=1
                 graph.merge(n1)
@@ -180,7 +170,8 @@ for i in backpatch:
             n2=graph.find_one("Grande",property_key='name',property_value=j)
             if(n2 is None):
                 print (j)
-            recreate(n1,n2,con,1)
+            else:
+                recreate(n1,n2,con,1)
 #print (death_note)
 for i in death_note:
     del backpatch[i]
@@ -244,7 +235,6 @@ for li in pair:
                 new[a].append(li[0])
                 switch[li[0]]=1
 #filter(lambda a: a !=[0], new)
-print ("dsfdgg  ga d fadsfagf ")
 new[:] = (value for value in new if value !=[0])
 for li in new:
     if(0 in li):
@@ -252,10 +242,26 @@ for li in new:
         del li[a]
 for i in new:
     print (i)
-
+ficid=[]
 for li in new:
+    ficid.append(li[0])
     for t in li:
         n1=graph.find_one("Grande",property_key='cid',property_value=t)
         graph.merge(n1)
         n1['cid']=li[0]
+        n1.push()
+for rec in graph.run("match (n:Grande) where n.deg=0 return n.cid"):
+    ci=str(rec[0])
+    ficid.append(ci)
+filter(lambda a: a !=[0],ficid)
+print (ficid)
+
+rc=0
+for i in ficid:
+    rc+=1
+    for rec in graph.run("match (n:Grande) where n.cid={mane} return n.name",mane=i):
+        naam=str(rec[0])
+        n1=graph.find_one("Grande",property_key='name',property_value=naam)
+        graph.merge(n1)
+        n1['cid']=rc
         n1.push()
