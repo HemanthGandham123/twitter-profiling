@@ -14,6 +14,7 @@ ari=[]
   print w, d[w]
 '''
 ari.append('zero_node')
+distr=[]
 for i in range(1,clus+1):
     mac={}
     j=0
@@ -22,6 +23,7 @@ for i in range(1,clus+1):
         name=str(rec[0])
         degree=str(rec[1])
         mac[name]=int(degree)
+        distr.append(mac[name])
     if(j<3):
         ari.append(max(mac,key=mac.get))
     else:
@@ -45,3 +47,5 @@ for i in range(1,clus+1):
                             fit[i]+=1
             ari.append(mkey[fit.index(max(fit))])
 print (ari)
+distr.sort(reverse=True)
+print (distr)
